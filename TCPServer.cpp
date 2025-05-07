@@ -7,63 +7,78 @@
 #include <vector>
 #include <map>
 #include <cstring>
+#include <thread>
+#include <mutex>
 #include "CSmessage.h"
 #include "CSHome.h"
+#include <unordered_set>
+#include <chrono>
+#include <nlohmann/json.hpp>
+#include <set>
 
 using namespace std;
 
+std::mutex sessionMutex;
+std::mutex homeMutex;
+std::mutex userMutex;
+std::mutex udpMutex;
 
 // User database
+// --- Homes (shared) ---
+// --- Homes (shared) ---
+Home smartHome("SmartHome",
+    {
+        Room("101", {LightGroup(1, "White"), LightGroup(2, "Blue")}, {Robot(1), Robot(2)}),
+        Room("102", {LightGroup(3, "Red"), LightGroup(4, "Green")}, {Robot(3)})
+    },
+    {Alarm(1, 1234)},
+    {Lock(1, {1111, 2222, 3333})}
+);
+
+Home vacationVilla("VacationVilla",
+    {
+        Room("201", {LightGroup(5, "Yellow"), LightGroup(6, "Purple")}, {Robot(4)}),
+        Room("202", {LightGroup(7, "Cyan"), LightGroup(8, "Orange")}, {Robot(5), Robot(6)})
+    },
+    {Alarm(2, 5678)},
+    {Lock(2, {4444, 5555, 6666})}
+);
+
+Home adminHouse("AdminHouse",
+    {
+        Room("301", {LightGroup(9, "Pink"), LightGroup(10, "Brown")}, {Robot(7)}),
+        Room("302", {LightGroup(11, "Gray"), LightGroup(12, "Black")}, {Robot(8), Robot(9)})
+    },
+    {Alarm(3, 4321)},
+    {Lock(3, {7777, 8888, 9999})}
+);
+
+Home penthouse("Penthouse",
+    {
+        Room("401", {LightGroup(13, "Magenta"), LightGroup(14, "Teal")}, {Robot(10)}),
+        Room("402", {LightGroup(15, "Gold"), LightGroup(16, "Silver")}, {Robot(11), Robot(12)})
+    },
+    {Alarm(4, 8765)},
+    {Lock(4, {1010, 2020, 3030})}
+);
+
 map<string, User> users = {
-    {"user1", {"user1", "pass1", {
-        Home("SmartHome",
-            {Room("101", {LightGroup(1, "White"), LightGroup(2, "Blue")}),
-             Room("102", {LightGroup(3, "Red"), LightGroup(4, "Green")})},
-            {Alarm(1, 1234)},
-            {Lock(1, {1111, 2222, 3333})}),
-
-        Home("VacationVilla",
-            {Room("201", {LightGroup(5, "Yellow"), LightGroup(6, "Purple")}),
-             Room("202", {LightGroup(7, "Cyan"), LightGroup(8, "Orange")})},
-            {Alarm(2, 5678)},
-            {Lock(2, {4444, 5555, 6666})})
-    }}},
-
-    {"admin", {"admin", "adminpass", {
-        Home("AdminHouse",
-            {Room("301", {LightGroup(9, "Pink"), LightGroup(10, "Brown")}),
-             Room("302", {LightGroup(11, "Gray"), LightGroup(12, "Black")})},
-            {Alarm(3, 4321)},
-            {Lock(3, {7777, 8888, 9999})}),
-
-        Home("Penthouse",
-            {Room("401", {LightGroup(13, "Magenta"), LightGroup(14, "Teal")}),
-             Room("402", {LightGroup(15, "Gold"), LightGroup(16, "Silver")})},
-            {Alarm(4, 8765)},
-            {Lock(4, {1010, 2020, 3030})})
-    }}},
-
-    {"Nigel", {"Nigel", "John", {
-        Home("NigelHouse",
-            {Room("Living Room", {LightGroup(9, "Pink"), LightGroup(10, "Brown"), LightGroup(11, "Ginger")}),
-             Room("Kitchen", {LightGroup(11, "Gray")}),
-	     Room("Bedroom", {LightGroup(11, "Gray"), LightGroup(12, "Black")})
-	     },
-            {Alarm(3, 4321)},
-            {Lock(3, {7777, 8888, 9999}),Lock(8, {1234, 5678, 9111}), }),
-
-        Home("NigelPenthouse",
-            {Room("401", {LightGroup(13, "Magenta"), LightGroup(14, "Teal")}),
-             Room("402", {LightGroup(15, "Gold"), LightGroup(16, "Silver")})},
-            {Alarm(4, 8765)},
-            {Lock(4, {1010, 2020, 3030})})
-    }}},
-       
+    {"user1", {"user1", "pass1", {&smartHome, &vacationVilla}}},
+    {"admin", {"admin", "adminpass", {&adminHouse, &penthouse}}},
+    {"Nigel", {"Nigel", "John", {&adminHouse, &penthouse}}},
+    {"Jane", {"Jane", "janepass", {&smartHome, &penthouse}}},
+    {"Bob", {"Bob", "bobpass", {&vacationVilla, &adminHouse}}}
 };
+
 
 unordered_map<int, string> clientCurrentHome;
 // Track logged-in users
 map<int, string> activeSessions;
+
+unordered_map<string, string> userToRoom;
+unordered_map<string, sockaddr_in> userUdpAddr;
+unordered_map<string, set<string>>roomToUsers;
+unordered_map<string, set<string>>dynamicRooms;
 
 void createLoginResponse(CSmessage &request, CSmessage &response, int clientSocket) {
 
@@ -71,6 +86,7 @@ void createLoginResponse(CSmessage &request, CSmessage &response, int clientSock
     string password = request.getParam("Password");
     response.setType("MESS");
     if (users.count(username) && users[username].CheckPassword(password)) {
+	    std::lock_guard<std::mutex> lock(sessionMutex);
             activeSessions[clientSocket] = username;
             response.addParam("Response", "Ok");
     } else {
@@ -88,10 +104,10 @@ void createListHomesResponse(CSmessage &responseR, int clientSocket)
     string user = activeSessions[clientSocket];
     responseR.setType("LRES");
     if (users.count(user)) {
-            vector<Home> userHomes = users[user].GetHomes(); // Fetch the user's homes
+            vector<Home*> userHomes = users[user].GetHomes(); // Fetch the user's homes
             vector<string> homeNames;
             for (const auto &home : userHomes) {
-                homeNames.push_back(home.GetName());
+                homeNames.push_back(home->GetName());
             }
 	    json response;
             response["Response"] = "Ok";
@@ -116,7 +132,6 @@ void createAccessHomeResponse(CSmessage &request, CSmessage &responseR, int clie
 	    clientCurrentHome[clientSocket] = homeName;
             json response;
             response["Response"] = "Ok";
-
             json structure;
             structure["Rooms"] = home->GetRooms().size();
             structure["Locks"] = home->GetLocks().size();
@@ -189,9 +204,29 @@ void createGetRoomResponse(CSmessage &request, CSmessage &response, int clientSo
 
     Room *room = home->GetRoom(roomId);
     if (room) {
+	cout << "[Debug] Server sending Room with " << room->GetAllRobots().size() << " robots." << endl;
         response.setType("GRRES");
         response.addParam("Response", "Ok");
         response.addParam("Room", response.serializeRoom(*room).dump());
+	cout << "hello" << endl;
+	string roomKey = homeName + "_" + roomId;
+	cout << "[Debug] roomKey to insert: " << roomKey << endl;  
+
+	{
+    		std::lock_guard<std::mutex> lock(udpMutex);
+    		dynamicRooms[roomKey].insert(user);
+    		userToRoom[user] = roomKey;
+		roomToUsers[roomKey].insert(user);
+    		cout << "[Debug] Inserted user into dynamicRooms" << endl; 
+	        for (const auto& usr : dynamicRooms[roomKey]) {
+                	cout << usr << " ";
+                }
+
+		cout << endl;	
+		for (const auto& us : roomToUsers[roomKey]) {
+                        cout << us << " ";
+                }
+	}
     } else {
         response.setType("GRRES");
         response.addParam("Response", "Invalid Room");
@@ -320,6 +355,7 @@ void SetAlarmResponse(CSmessage &request, CSmessage & response, int clientSocket
 }
 
 void SetLockResponse(CSmessage &request, CSmessage &response, int clientSocket) {
+    //std::lock_guard<std::mutex> lock(sessionMutex);
     string user = activeSessions[clientSocket];
     string homeName = clientCurrentHome[clientSocket];
     cout << homeName << endl;
@@ -370,10 +406,13 @@ void processMessage(int clientSocket, CSmessage &request) {
         createLoginResponse(request, response, clientSocket);
     } 
     else if (type == "LOUT") {
-        if (activeSessions.count(clientSocket)) {
-            activeSessions.erase(clientSocket);
-            createLogoutResponse(response);
-        }
+	{
+	    std::lock_guard<std::mutex> lock(sessionMutex);
+        	if (activeSessions.count(clientSocket)) {
+            		activeSessions.erase(clientSocket);
+            	createLogoutResponse(response);
+        	}
+	}
     } 
     else if (type == "LISTH") {
         createListHomesResponse(response, clientSocket);
@@ -389,14 +428,13 @@ void processMessage(int clientSocket, CSmessage &request) {
     else if (type == "GAL") {
         createGetAlarmResponse(request, response, clientSocket);
     } 
-    } 
+ 
     else if (type == "SRO") {
 	cout << "ohho" << endl;
 	SetRoomResponse(request, response, clientSocket);
     }
     else if (type == "SAL") {
-        SetAlarmResponse(request, response, clientSocket);
-        
+        SetAlarmResponse(request, response, clientSocket);    
     } 
     else if (type == "SLO") {
         SetLockResponse(request, response, clientSocket);
@@ -427,6 +465,160 @@ void handleClient(int clientSocket) {
     close(clientSocket);
 }
 
+void handleUDP() {
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    struct sockaddr_in udpAddr{}, clientAddr{};
+    socklen_t addrLen = sizeof(clientAddr);
+
+    udpAddr.sin_family = AF_INET;
+    udpAddr.sin_port = htons(9090);  // UDP Server on port 9090
+    udpAddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(udpSocket, (struct sockaddr*)&udpAddr, sizeof(udpAddr)) < 0) {
+        cerr << "Failed to bind UDP socket.\n";
+        return;
+    }
+
+    cout << "UDP server running on port 9090...\n";
+
+    char buffer[1024];
+
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+        int bytes = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0,
+                             (struct sockaddr*)&clientAddr, &addrLen);
+
+        if (bytes > 0) {
+            buffer[bytes] = '\0';
+
+	    
+
+            try {
+                json robotUpdate = json::parse(buffer);
+		string type = robotUpdate["Type"];
+	        cout << type << endl;
+	        cout << type << endl;	
+                string username = robotUpdate["username"];
+		if (robotUpdate["Type"] == "HELLO") {
+    			string username = robotUpdate["username"];
+			{
+        			// Protect the shared map with a mutex
+        			std::lock_guard<std::mutex> lock(udpMutex);
+        			// Save the user's UDP address
+        		userUdpAddr[username] = clientAddr;
+    			}
+			cout << "[Debug] Registered UDP address for user: " << username << endl;
+    			continue; // Finished processing this HELLO message
+		}
+		else
+		{
+			 if (!robotUpdate.contains("username") ||
+                   		!robotUpdate.contains("robotId") ||
+                   		!robotUpdate.contains("room") ||
+                   		!robotUpdate.contains("x") ||
+                   		!robotUpdate.contains("y"))
+                	{
+                        	cerr << "UDP Error: Missing fields in message.\n";
+                        	continue;
+                	}
+                	int robotId = robotUpdate["robotId"];
+                	int x = robotUpdate["x"];
+                	int y = robotUpdate["y"];
+                	cout << "I love Networks" << endl;
+                	string roomKey;
+                	{
+                    		std::lock_guard<std::mutex> lock(udpMutex);
+
+                    		if (userToRoom.find(username) == userToRoom.end()) {
+                        		cerr << "UDP Error: User not registered in a room.\n";
+                        		continue;
+                    		}
+
+                    		roomKey = userToRoom[username];
+
+                    		if (userUdpAddr.find(username) == userUdpAddr.end()) {
+                        		userUdpAddr[username] = clientAddr;
+                    		}
+                	}
+                	cout << "let her go" << endl;
+                	size_t underscorePos = roomKey.find('_');
+                	if (underscorePos == string::npos) {
+                    		cerr << "Invalid roomKey format.\n";
+                    		continue;
+                	}
+
+                	string homeName = roomKey.substr(0, underscorePos);
+                	string roomId = roomKey.substr(underscorePos + 1);
+
+                	Home* home = nullptr;
+                	Room* room = nullptr;
+			cout << "So get away " << endl;
+
+                	{	
+                    		std::lock_guard<std::mutex> lock(homeMutex);
+                    		cout << "awwwww" << endl;
+                    		for (auto& h : users[username].GetHomes()) {
+					cout << "[Debug] Comparing home name: '" << h->GetName() << "' with '" << homeName << "'" << endl;
+                        		if (h->GetName() == homeName) {
+                            			home = h;
+                            			break;
+                        		}
+                    		}
+                    		cout << "Because I miss u all the time" << endl;
+		    		cout << home->GetName() << endl;
+                    		if (home) {
+                        		cout << roomId << endl;
+		        		cout << roomId.length() << endl;	
+                        		room = home->GetRoom(roomId);
+					cout << room->getRoomId();
+                    		}
+		    		cout << "SOOO get away, another way too feel" << endl;
+                	}
+                	cout << "is it here" << endl;
+                	if (!room) {
+                    		cerr << "Could not find room for user.\n";
+                    		continue;
+                	}
+
+                	// (Here you would update robot position in the Room structure if you had robot objects!)
+
+                	{
+                    		std::lock_guard<std::mutex> lock(udpMutex);
+                    		cout << " uwuuuuu" << endl;
+                    		for (const string& targetUser : dynamicRooms[roomKey]) {
+                        		cout << " ala " << endl;
+					if (targetUser == username) continue;
+                        		cout << "el diablo " << endl;
+					cout << targetUser << endl;
+                        		if (userUdpAddr.find(targetUser) != userUdpAddr.end()) {
+			    			cout << "just let it be " << endl;
+                            			sockaddr_in targetAddr = userUdpAddr[targetUser];
+                            			json responseMessage;
+                            			responseMessage["Type"] = "MRRES";
+                            			responseMessage["Username"] = username;
+                            			responseMessage["RobotId"] = robotId;
+                            			responseMessage["X"] = x;
+                            			responseMessage["Y"] = y;
+
+                            			string outData = responseMessage.dump();
+			    			cout << outData << endl;
+                            			sendto(udpSocket, outData.c_str(), outData.size(), 0,(struct sockaddr*)&targetAddr, sizeof(targetAddr));
+
+                        		}
+                    		}
+                	}
+		
+		}
+            } catch (...) {
+                cerr << "Invalid UDP message received.\n";
+            }
+        }
+    }
+
+    close(udpSocket);
+}
+
+
 
 int main() {
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -439,12 +631,16 @@ int main() {
     bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
     listen(serverSocket, 5);
     cout << "Server running on port 8080...\n";
+     
 
+    //Add UDP if it doesnt work delet the folliwung2 lines
+    std::thread udpThread(handleUDP);
+    udpThread.detach();    
     while (true) {
         int clientSocket = accept(serverSocket, nullptr, nullptr);
         if (clientSocket >= 0) {
-            cout << "Client connected.\n";
-            handleClient(clientSocket);
+	    std::thread clientThread(handleClient, clientSocket);
+            clientThread.detach();	
         }
     }
 

@@ -150,8 +150,85 @@ void LightGroup :: SetColor(string newColor)
 Room :: Room() : RoomID(0), WindowBlinds(false){}
 Room :: Room(int id, vector<LightGroup> lightGroups) : RoomID(id), LightGroups(lightGroups), WindowBlinds(false){}
 */
+
+
+// Robot Constructors
+Robot::Robot() : id(0), x(0), y(0), controlledBy("") {
+    lastMoved = std::chrono::steady_clock::now();
+}
+
+Robot::Robot(int id_) : id(id_), x(0), y(0), controlledBy("") {
+    lastMoved = std::chrono::steady_clock::now();
+}
+
+// Accessors (getters)
+int Robot::getId() const {
+    return id;
+}
+
+int Robot::getX() const {
+    return x;
+}
+
+int Robot::getY() const {
+    return y;
+}
+
+string Robot::getControlledBy() const {
+    return controlledBy;
+}
+
+// Mutators (setters)
+void Robot::setX(int x_) {
+    x = x_;
+}
+
+void Robot::setY(int y_) {
+    y = y_;
+}
+
+void Robot::setControlledBy(const string& name) {
+    controlledBy = name;
+}
+
+//NEW STUFF
+void Room::AddRobot(const Robot& r) {
+    robots[r.getId()] = r;
+}
+
+Robot* Room::GetRobot(int id) {
+    if (robots.count(id)) return &robots[id];
+    return nullptr;
+}
+
+const unordered_map<int, Robot>& Room::GetAllRobots() const {
+    return robots;
+}
+
+void Room::AddUser(const string& username) {
+    usersInRoom.insert(username);
+}
+
+void Room::RemoveUser(const string& username) {
+    usersInRoom.erase(username);
+}
+
+bool Room::HasUser(const string& username) const {
+    return usersInRoom.count(username) > 0;
+}
+
+unordered_set<string> Room::GetUsers() const {
+    return usersInRoom;
+}
+
 Room :: Room() : RoomID("NA"), WindowBlinds(false){}
-Room :: Room(string id, vector<LightGroup> lightGroups) : RoomID(id), LightGroups(lightGroups), WindowBlinds(false){}
+Room::Room(string id, vector<LightGroup> lightGroups, vector<Robot> robots)
+    : RoomID(id), LightGroups(lightGroups), WindowBlinds(false)
+    {
+        for (const auto& robot : robots) {
+           AddRobot(robot);
+    }
+}
 
 LightGroup * Room :: GetLightGroup(int id)
 {
@@ -236,13 +313,18 @@ Room * Home :: GetRoom(int id)
 */
 Room * Home :: GetRoom(string id)
 {
+	cout << "wtf" << endl;
         for (Room& room : Rooms)
         {
+		cout << "1" << endl;
+		cout << room.getRoomId();
+		cout << "2" << endl;
                 if (room.getRoomId() == id)
                 {
                         return &room;
                 }
         }
+	cout << "no way" << endl;
         return nullptr;
 }
 Alarm * Home :: GetAlarm(int id)
@@ -329,7 +411,7 @@ string Home :: GetName() const
 }
 
 User :: User() : Username("NA"), Password("NA"){}
-User :: User(string name, string password, vector<Home>net) : Username(name), Password(password), Networth(net){}
+User :: User(string name, string password, vector<Home*>net) : Username(name), Password(password), Networth(net){}
 
 string User:: GetUsername()
 {
@@ -341,18 +423,18 @@ string User:: GetPassword()
         return Password;
 }
 
-vector<Home> User :: GetHomes()
+vector<Home*> User :: GetHomes()
 {
 	return Networth;
 }
 
 Home * User :: GetHome(string homeName)
 {
-        for (Home & home : Networth)
+        for (Home * home : Networth)
         {
-                if (home.GetName() == homeName)
+                if (home->GetName() == homeName)
                 {
-                        return &home;
+                        return home;
                 }
         }
         return nullptr;

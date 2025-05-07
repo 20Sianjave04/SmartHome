@@ -16,13 +16,15 @@ enum AppState {
     EXIT_APP
 };
 
-
+const char * ip = "100.65.30.221";
 bool isAccess = true;
 bool isLoggedIn = false;
 string currentHome = "";
 void homeMenu(int socket);  
 Room lastReceivedRoom;
 
+void gameRoomMenu();
+string currentUsername;
 			   
 void createLoginMessage(CSmessage & request, string username, string password) {
     request.setType("LGIN");
@@ -168,6 +170,18 @@ void processGetRoomResponse(CSmessage &responseR) {
     		cout << "    Status: " << (lg.isOn() ? "On" : "Off") << endl;
     		cout << "    Color: " << lg.getColor() << endl;
 	}
+	cout << "[Debug] Client received Room with " << lastReceivedRoom.GetAllRobots().size() << " robots." << endl;
+	// Retrieve and print all Robots in the room
+	const unordered_map<int, Robot>& robots = lastReceivedRoom.GetAllRobots();
+	
+	cout << "Robots: " << endl;
+	for (const auto& [robotId, robot] : robots) {
+    		cout << "  - Robot ID: " << robotId << endl;
+    		cout << "    Position: (" << robot.getX() << ", " << robot.getY() << ")" << endl;
+    		cout << "    Controlled By: " << (robot.getControlledBy().empty() ? "None" : robot.getControlledBy()) << endl;
+	}
+
+	gameRoomMenu();
     } else {
         cout << "Room Not Found or Invalid Request." << endl;
     }
@@ -217,6 +231,7 @@ void sendAndReceive(int socket, CSmessage &request) {
         } else if (type == "GRRES") {
 	    cout<< "here" << endl;
             processGetRoomResponse(response);
+
         } else if (type == "GARES") {
             processGetAlarmResponse(response);
         } else if (type == "GLRES") {
@@ -251,6 +266,98 @@ void sendAndReceive(int socket, CSmessage &request) {
     }
 }
 
+void gameRoomMenu() {
+    cout << "\nEntered Game Room Mode!\n";
+
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    struct sockaddr_in serverUDPAddr{};
+    serverUDPAddr.sin_family = AF_INET;
+    serverUDPAddr.sin_port = htons(9090); // Same as your server UDP port
+    serverUDPAddr.sin_addr.s_addr = inet_addr(ip); // Server IP
+    
+    
+    json helloMessage;
+    helloMessage["Type"] = "HELLO";
+    helloMessage["username"] = currentUsername; 
+    helloMessage["room"] = lastReceivedRoom.getRoomId(); 
+
+    string helloData = helloMessage.dump();
+
+    sendto(udpSocket, helloData.c_str(), helloData.size(), 0, (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
+
+    string choice;
+    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
+    cin >> choice;
+
+    if (choice == "1") {
+        // Control robot
+        int robotId;
+        cout << "Enter Robot ID to control: ";
+        cin >> robotId;
+
+        cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
+
+        while (true) {
+            char move;
+            cin >> move;
+
+            int dx = 0, dy = 0;
+            if (move == 'w') dy = -1;
+            else if (move == 's') dy = 1;
+            else if (move == 'a') dx = -1;
+            else if (move == 'd') dx = 1;
+            else if (move == 'q') break;
+            else continue;
+
+            json moveMessage;
+	    cout << currentUsername << endl;
+            moveMessage["Type"] = "MRO";  // Move Robot Operation
+            moveMessage["username"] = currentUsername; // You must save logged-in username!
+            moveMessage["room"] = lastReceivedRoom.getRoomId(); // room you are in
+            moveMessage["robotId"] = robotId;
+            moveMessage["x"] = dx;
+            moveMessage["y"] = dy;
+
+            string outData = moveMessage.dump();
+	    cout << outData << endl;
+            sendto(udpSocket, outData.c_str(), outData.size(), 0,
+                   (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
+        }
+    }
+    else if (choice == "2") {
+        // View robots
+        cout << "Listening for robot updates (press Ctrl+C to exit)...\n";
+
+        char buffer[1024];
+        struct sockaddr_in fromAddr;
+        socklen_t fromLen = sizeof(fromAddr);
+
+        while (true) {
+            memset(buffer, 0, sizeof(buffer));
+            int bytes = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0,
+                                 (struct sockaddr*)&fromAddr, &fromLen);
+
+            if (bytes > 0) {
+                buffer[bytes] = '\0';
+                try {
+		    cout << buffer << endl;
+                    json received = json::parse(buffer);
+		    
+                    if (received["Type"] == "MRRES") {
+                        cout << "Robot " << received["RobotId"]
+                             << " moved to (" << received["X"] << ", " << received["Y"]
+                             << ") by " << received["Username"] << endl;
+                    }
+                } catch (...) {
+                    cerr << "Invalid message format.\n";
+                }
+            }
+        }
+    }
+    close(udpSocket);
+}
+
+
 // **Top Menu (Login/Exit)**
 void topMenu(int socket, AppState &state) {
     string choice;
@@ -264,9 +371,10 @@ void topMenu(int socket, AppState &state) {
             cin >> username;
             cout << "Password: ";
             cin >> password;
-
+            
             CSmessage request;
             createLoginMessage(request,username, password);
+	    currentUsername = username;
             sendAndReceive(socket,request);
 	    state = MAIN_MENU;
 	    return;
@@ -498,7 +606,7 @@ int main() {
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(8080);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serverAddr.sin_addr.s_addr = inet_addr(ip);
 
     if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         cerr << "Connection failed!\n";
