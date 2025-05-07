@@ -287,16 +287,14 @@ void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket)
         cin >> robotId;
 
         cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
-
+        int dx = 0, dy = 0;
         while (true) {
             char move;
             cin >> move;
-
-            int dx = 0, dy = 0;
-            if (move == 'w') dy = -1;
-            else if (move == 's') dy = 1;
-            else if (move == 'a') dx = -1;
-            else if (move == 'd') dx = 1;
+            if (move == 'w') dy += -1;
+            else if (move == 's') dy += 1;
+            else if (move == 'a') dx += -1;
+            else if (move == 'd') dx += 1;
             else if (move == 'q') break;
             else continue;
 
