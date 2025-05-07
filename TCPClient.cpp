@@ -281,42 +281,33 @@ void hello_udp(struct sockaddr_in &serverUDPAddr, int udpSocket)
 
 }
 
-void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket)
+int dx = 0, dy = 0;
+int current_robot_id;
+
+void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket, char move)
 {
- 	int robotId;
-        cout << "Enter Robot ID to control: ";
-        cin >> robotId;
+         if (move == 'w') dy += -1;
+         else if (move == 's') dy += 1;
+         else if (move == 'a') dx += -1;
+         else if (move == 'd') dx += 1;
+         else return;
 
-        cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
-        int dx = 0, dy = 0;
-        while (true) {
-            char move;
-            cin >> move;
-            if (move == 'w') dy += -1;
-            else if (move == 's') dy += 1;
-            else if (move == 'a') dx += -1;
-            else if (move == 'd') dx += 1;
-            else if (move == 'q') break;
-            else continue;
+         json moveMessage;
+         cout << currentUsername << endl;
+         moveMessage["Type"] = "MRO";  // Move Robot Operation
+         moveMessage["username"] = currentUsername; // You must save logged-in username!
+         moveMessage["room"] = lastReceivedRoom.getRoomId(); // room you are in
+         moveMessage["robotId"] = current_robot_id;
+         moveMessage["x"] = dx;
+         moveMessage["y"] = dy;
 
-            json moveMessage;
-            cout << currentUsername << endl;
-            moveMessage["Type"] = "MRO";  // Move Robot Operation
-            moveMessage["username"] = currentUsername; // You must save logged-in username!
-            moveMessage["room"] = lastReceivedRoom.getRoomId(); // room you are in
-            moveMessage["robotId"] = robotId;
-            moveMessage["x"] = dx;
-            moveMessage["y"] = dy;
-
-            string outData = moveMessage.dump();
-            cout << outData << endl;
-            sendto(udpSocket, outData.c_str(), outData.size(), 0,
-                   (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
-        }
-
+         string outData = moveMessage.dump();
+         cout << outData << endl;
+         sendto(udpSocket, outData.c_str(), outData.size(), 0, (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
+       
 }
 
-void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket)
+void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode)
 {
 	cout << "Listening for robot updates (press 'q' to return to the previous menu, or any other key to continue listening)...\n";
 
@@ -366,11 +357,26 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket)
             		// Check for user input
             		if (FD_ISSET(STDIN_FILENO, &readfds)) {
                 		// User has entered a key
-                		char input;
-                		cin >> input;
-                		if (input == 'q' || input == 'Q') {
-                    			break;  // Exit the loop and return to the previous menu
-                		}
+				if (mode)
+				{
+					cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
+					char move;
+            				cin >> move;
+					if (move == 'q' || move == 'Q') {
+                                        	break;  // Exit the loop and return to the previous menu
+                                	}
+					robot_control(serverUDPAddr,udpSocket,move);
+
+					
+				}
+				else
+				{
+                			char input;
+                			cin >> input;
+                			if (input == 'q' || input == 'Q') {
+                    				break;  // Exit the loop and return to the previous menu
+                			}
+				}
             		}
         	} else if (activity == 0) {
             		// Timeout reached, no data or input
@@ -383,6 +389,25 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket)
     	}
 
 }
+
+void robot_control_c(struct sockaddr_in &serverUDPAddr, int udpSocket)
+{
+        int robotId;
+        cout << "Enter Robot ID to control: ";
+        cin >> robotId;
+        Robot * controlled_robot = lastReceivedRoom.GetRobot(robotId);
+        if (controlled_robot == nullptr)
+        {
+                cout << "ROBOT: " << robotId << " doesnt exst" << endl;
+                return;
+        }
+	current_robot_id = robotId;
+        dx = controlled_robot->getX();
+        dy = controlled_robot->getY();
+        robot_listening(serverUDPAddr, udpSocket, true);
+
+}
+
 
 void gameRoomMenu() {
     cout << "\nEntered Game Room Mode!\n";
@@ -402,10 +427,10 @@ void gameRoomMenu() {
     	cin >> choice;
 
     	if (choice == "1") {
-        	robot_control(serverUDPAddr, udpSocket);
+        	robot_control_c(serverUDPAddr, udpSocket);
     	}
     	else if (choice == "2") {
-		robot_listening(serverUDPAddr, udpSocket);
+		robot_listening(serverUDPAddr, udpSocket, false);
     	}
 	else if(choice == "3")
 	{
