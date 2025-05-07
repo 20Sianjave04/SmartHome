@@ -427,6 +427,9 @@ void processMessage(int clientSocket, CSmessage &request) {
    
     else if (type == "GAL") {
         createGetAlarmResponse(request, response, clientSocket);
+    }
+    else if (type == "GLO"){
+   	createGetLockResponse(request, response, clientSocket);
     } 
  
     else if (type == "SRO") {
