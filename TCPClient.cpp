@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include "CSmessage.h"
 #include <SFML/Graphics.hpp>
+#include <termios.h>
 
 using namespace std;
 
@@ -342,6 +343,18 @@ void update_local_room(int robotId, int newX, int newY, string username)
     }
 }
 
+char getKey() {
+    struct termios oldt, newt;
+    char ch;
+    tcgetattr(STDIN_FILENO, &oldt);  // Get the current terminal settings
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);  // Disable canonical mode and echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Apply the new settings
+    ch = getchar();  // Read a character
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Restore the old settings
+    return ch;
+}
+
 void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode)
 {
 	cout << "Listening for robot updates (press 'q' to return to the previous menu, or any other key to continue listening)...\n";
@@ -398,6 +411,7 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode
 					cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
 					char move;
             				cin >> move;
+					//char move = getKey();
 					robot_control(serverUDPAddr,udpSocket,move);
 
 					if (move == 'q' || move == 'Q') {
