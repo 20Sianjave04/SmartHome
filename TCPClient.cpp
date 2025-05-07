@@ -17,6 +17,7 @@ enum AppState {
 };
 
 const char * ip = "100.65.30.221";
+//const char * ip = "100.65.80.249";*
 bool isAccess = true;
 bool isLoggedIn = false;
 string currentHome = "";
@@ -266,32 +267,22 @@ void sendAndReceive(int socket, CSmessage &request) {
     }
 }
 
-void gameRoomMenu() {
-    cout << "\nEntered Game Room Mode!\n";
-
-    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    struct sockaddr_in serverUDPAddr{};
-    serverUDPAddr.sin_family = AF_INET;
-    serverUDPAddr.sin_port = htons(9090); // Same as your server UDP port
-    serverUDPAddr.sin_addr.s_addr = inet_addr(ip); // Server IP
-    
-    
+void hello_udp(struct sockaddr_in &serverUDPAddr, int udpSocket)
+{
     json helloMessage;
     helloMessage["Type"] = "HELLO";
-    helloMessage["username"] = currentUsername; 
-    helloMessage["room"] = lastReceivedRoom.getRoomId(); 
+    helloMessage["username"] = currentUsername;
+    helloMessage["room"] = lastReceivedRoom.getRoomId();
 
     string helloData = helloMessage.dump();
 
     sendto(udpSocket, helloData.c_str(), helloData.size(), 0, (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
 
-    string choice;
-    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
-    cin >> choice;
+}
 
-    if (choice == "1") {
-        // Control robot
-        int robotId;
+void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket)
+{
+ 	int robotId;
         cout << "Enter Robot ID to control: ";
         cin >> robotId;
 
@@ -310,7 +301,7 @@ void gameRoomMenu() {
             else continue;
 
             json moveMessage;
-	    cout << currentUsername << endl;
+            cout << currentUsername << endl;
             moveMessage["Type"] = "MRO";  // Move Robot Operation
             moveMessage["username"] = currentUsername; // You must save logged-in username!
             moveMessage["room"] = lastReceivedRoom.getRoomId(); // room you are in
@@ -319,13 +310,34 @@ void gameRoomMenu() {
             moveMessage["y"] = dy;
 
             string outData = moveMessage.dump();
-	    cout << outData << endl;
+            cout << outData << endl;
             sendto(udpSocket, outData.c_str(), outData.size(), 0,
                    (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
         }
+
+}
+
+void gameRoomMenu() {
+    cout << "\nEntered Game Room Mode!\n";
+
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    struct sockaddr_in serverUDPAddr{};
+    serverUDPAddr.sin_family = AF_INET;
+    serverUDPAddr.sin_port = htons(9090); // Same as your server UDP port
+    serverUDPAddr.sin_addr.s_addr = inet_addr(ip); // Server IP
+    
+    
+    hello_udp(serverUDPAddr, udpSocket);
+    string choice;
+    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
+    cin >> choice;
+
+    if (choice == "1") {
+        robot_control(serverUDPAddr, udpSocket);
     }
     else if (choice == "2") {
         // View robots
+	/*
         cout << "Listening for robot updates (press Ctrl+C to exit)...\n";
 
         char buffer[1024];
@@ -352,8 +364,72 @@ void gameRoomMenu() {
                     cerr << "Invalid message format.\n";
                 }
             }
-        }
-    }
+	    
+        }*/
+	cout << "Listening for robot updates (press 'q' to return to the previous menu, or any other key to continue listening)...\n";
+
+    	char buffer[1024];
+   	struct sockaddr_in fromAddr;
+    	socklen_t fromLen = sizeof(fromAddr);
+
+    	fd_set readfds;
+    	struct timeval timeout;
+
+    	while (true) {
+        // Prepare file descriptor set
+        	FD_ZERO(&readfds);
+        	FD_SET(udpSocket, &readfds); // Monitor udpSocket for reading
+        	FD_SET(STDIN_FILENO, &readfds); // Monitor standard input (keyboard) for reading
+
+        	// Set timeout: 1 second timeout
+        	timeout.tv_sec = 1;
+        	timeout.tv_usec = 0;
+
+        	// Call select() to monitor the file descriptors
+        	int activity = select(udpSocket + 1, &readfds, NULL, NULL, &timeout);
+
+        	if (activity > 0) {
+            		if (FD_ISSET(udpSocket, &readfds)) {
+                		// Data available to read from udpSocket
+                		memset(buffer, 0, sizeof(buffer));
+                		int bytes = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0, (struct sockaddr*)&fromAddr, &fromLen);
+
+               			 if (bytes > 0) {
+                    			buffer[bytes] = '\0';
+                    			try {
+                        			json received = json::parse(buffer);
+
+                        			if (received["Type"] == "MRRES") {
+                            				cout << "Robot " << received["RobotId"]
+                                 			<< " moved to (" << received["X"] << ", " 
+                                 			<< received["Y"] << ") by " 
+                                 			<< received["Username"] << endl;
+                        			}
+                    			} catch (...) {
+                        			cerr << "Invalid message format.\n";
+                    			}
+                		}
+            		}
+
+            		// Check for user input
+            		if (FD_ISSET(STDIN_FILENO, &readfds)) {
+                		// User has entered a key
+                		char input;
+                		cin >> input;
+                		if (input == 'q' || input == 'Q') {
+                    			break;  // Exit the loop and return to the previous menu
+                		}
+            		}
+        	} else if (activity == 0) {
+            		// Timeout reached, no data or input
+            		// You can add any periodic tasks you want to do here if needed
+        	} else {
+            		// Error in select()
+            		cerr << "Error in select().\n";
+            		break;
+        	}
+    	}
+    }	
     close(udpSocket);
 }
 
