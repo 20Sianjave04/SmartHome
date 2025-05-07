@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "CSmessage.h"
+#include <SFML/Graphics.hpp>
 
 using namespace std;
 

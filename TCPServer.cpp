@@ -508,7 +508,7 @@ void handleUDP() {
         			// Protect the shared map with a mutex
         			std::lock_guard<std::mutex> lock(udpMutex);
         			// Save the user's UDP address
-        		userUdpAddr[username] = clientAddr;
+        		        userUdpAddr[username] = clientAddr;
     			}
 			cout << "[Debug] Registered UDP address for user: " << username << endl;
     			continue; // Finished processing this HELLO message
@@ -583,8 +583,7 @@ void handleUDP() {
                     		continue;
                 	}
 
-                	// (Here you would update robot position in the Room structure if you had robot objects!)
-
+                        cout << "OMGGG" << endl;
                 	{
                     		std::lock_guard<std::mutex> lock(udpMutex);
                     		cout << " uwuuuuu" << endl;
