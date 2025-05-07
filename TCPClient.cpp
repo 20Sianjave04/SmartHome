@@ -397,14 +397,21 @@ void gameRoomMenu() {
     
     hello_udp(serverUDPAddr, udpSocket);
     string choice;
-    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
-    cin >> choice;
+    while(true)
+    {
+    	cout << "Choose:\n1. Control Robot\n2. View Robots\n3. Back\nChoice: ";
+    	cin >> choice;
 
-    if (choice == "1") {
-        robot_control(serverUDPAddr, udpSocket);
-    }
-    else if (choice == "2") {
-	robot_listening(serverUDPAddr, udpSocket);
+    	if (choice == "1") {
+        	robot_control(serverUDPAddr, udpSocket);
+    	}
+    	else if (choice == "2") {
+		robot_listening(serverUDPAddr, udpSocket);
+    	}
+	else if(choice == "3")
+	{
+		break;
+	}
     }	
     close(udpSocket);
 }
