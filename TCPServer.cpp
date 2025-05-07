@@ -513,6 +513,36 @@ void handleUDP() {
 			cout << "[Debug] Registered UDP address for user: " << username << endl;
     			continue; // Finished processing this HELLO message
 		}
+		else if (robotUpdate["Type"] == "QUIT")
+		{
+			string username = robotUpdate["username"];
+    			string roomKey;
+
+    			// Protect the shared map with a mutex
+    			std::lock_guard<std::mutex> lock(udpMutex);
+
+    			// Check if the user is in a room
+    			if (userToRoom.find(username) != userToRoom.end()) {
+        			roomKey = userToRoom[username];
+        
+        			// Remove the user from dynamicRooms and roomToUsers
+        			dynamicRooms[roomKey].erase(username);
+        			roomToUsers[roomKey].erase(username);
+
+        			// If the room has no more users, you can also remove the room from dynamicRooms and roomToUsers if necessary
+        			if (roomToUsers[roomKey].empty()) {
+            				roomToUsers.erase(roomKey);
+            				dynamicRooms.erase(roomKey);
+        			}
+
+        			// Remove the user from userToRoom map
+        			userToRoom.erase(username);
+
+        			cout << "[Debug] Removed user " << username << " from room " << roomKey << endl;
+    			} else {
+        			cout << "[Error] User " << username << " not found in any room." << endl;
+    			}
+		}
 		else
 		{
 			 if (!robotUpdate.contains("username") ||

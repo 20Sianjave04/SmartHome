@@ -434,6 +434,15 @@ void gameRoomMenu() {
     	}
 	else if(choice == "3")
 	{
+		json quitMessage;
+         	cout << currentUsername << endl;
+         	quitMessage["Type"] = "MRO";  // Move Robot Operation
+         	quitMessage["username"] = currentUsername; // You must save logged-in username!
+
+         	string outquit = quitMessage.dump();
+         	cout << outquit << endl;
+         	sendto(udpSocket, outquit.c_str(), outquit.size(), 0, (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
+
 		break;
 	}
     }	
