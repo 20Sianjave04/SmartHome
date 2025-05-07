@@ -297,7 +297,8 @@ void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket, char move)
          else if (move == 's') dy += 1;
          else if (move == 'a') dx += -1;
          else if (move == 'd') dx += 1;
-         else moveMessage["Type"] = "OUT"; 
+         else if (move == 'q') moveMessage["Type"] = "OUT"; 
+	 else return;
 
         
          cout << currentUsername << endl;
@@ -397,10 +398,11 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode
 					cout << "Use W/A/S/D keys to move. Type Q to quit control mode.\n";
 					char move;
             				cin >> move;
+					robot_control(serverUDPAddr,udpSocket,move);
+
 					if (move == 'q' || move == 'Q') {
                                         	break;  // Exit the loop and return to the previous menu
                                 	}
-					robot_control(serverUDPAddr,udpSocket,move);
 
 					
 				}
@@ -439,6 +441,13 @@ void robot_control_c(struct sockaddr_in &serverUDPAddr, int udpSocket, int clien
                 cout << "ROBOT: " << robotId << " doesnt exst" << endl;
                 return;
         }
+	string use = controlled_robot->getControlledBy();
+	if (use != "")
+	{
+		cout << "RObot is being used by: " << use << endl;
+		return;
+	}
+
 	current_robot_id = robotId;
         dx = controlled_robot->getX();
         dy = controlled_robot->getY();
