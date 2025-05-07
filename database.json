@@ -1,0 +1,807 @@
+{
+    "Bob": {
+        "Homes": [
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 2,
+                        "Code": 5678,
+                        "On": false
+                    }
+                ],
+                "HomeName": "VacationVilla",
+                "Locks": [
+                    {
+                        "LockId": 2,
+                        "Open": false,
+                        "PinCodes": [
+                            4444,
+                            5555,
+                            6666
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Yellow",
+                                "LightGroupId": 5,
+                                "On": false
+                            },
+                            {
+                                "Color": "Purple",
+                                "LightGroupId": 6,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 4,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "201",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Cyan",
+                                "LightGroupId": 7,
+                                "On": false
+                            },
+                            {
+                                "Color": "Orange",
+                                "LightGroupId": 8,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 6,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 5,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "202",
+                        "WindowBlinds": false
+                    }
+                ]
+            },
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 3,
+                        "Code": 4321,
+                        "On": false
+                    }
+                ],
+                "HomeName": "AdminHouse",
+                "Locks": [
+                    {
+                        "LockId": 3,
+                        "Open": false,
+                        "PinCodes": [
+                            7777,
+                            8888,
+                            9999
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Pink",
+                                "LightGroupId": 9,
+                                "On": false
+                            },
+                            {
+                                "Color": "Brown",
+                                "LightGroupId": 10,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 7,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "301",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gray",
+                                "LightGroupId": 11,
+                                "On": false
+                            },
+                            {
+                                "Color": "Black",
+                                "LightGroupId": 12,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 9,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 8,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "302",
+                        "WindowBlinds": false
+                    }
+                ]
+            }
+        ],
+        "Password": "bobpass",
+        "Username": "Bob"
+    },
+    "Jane": {
+        "Homes": [
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 1,
+                        "Code": 1234,
+                        "On": false
+                    }
+                ],
+                "HomeName": "SmartHome",
+                "Locks": [
+                    {
+                        "LockId": 1,
+                        "Open": false,
+                        "PinCodes": [
+                            1111,
+                            2222,
+                            3333
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "White",
+                                "LightGroupId": 1,
+                                "On": false
+                            },
+                            {
+                                "Color": "Blue",
+                                "LightGroupId": 2,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 2,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 1,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "101",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Red",
+                                "LightGroupId": 3,
+                                "On": false
+                            },
+                            {
+                                "Color": "Green",
+                                "LightGroupId": 4,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 3,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "102",
+                        "WindowBlinds": false
+                    }
+                ]
+            },
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 4,
+                        "Code": 8765,
+                        "On": false
+                    }
+                ],
+                "HomeName": "Penthouse",
+                "Locks": [
+                    {
+                        "LockId": 4,
+                        "Open": false,
+                        "PinCodes": [
+                            1010,
+                            2020,
+                            3030
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Magenta",
+                                "LightGroupId": 13,
+                                "On": false
+                            },
+                            {
+                                "Color": "Teal",
+                                "LightGroupId": 14,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 10,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "401",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gold",
+                                "LightGroupId": 15,
+                                "On": false
+                            },
+                            {
+                                "Color": "Silver",
+                                "LightGroupId": 16,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 12,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 11,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "402",
+                        "WindowBlinds": false
+                    }
+                ]
+            }
+        ],
+        "Password": "janepass",
+        "Username": "Jane"
+    },
+    "NA": {
+        "Homes": [],
+        "Password": "NA",
+        "Username": "NA"
+    },
+    "Nigel": {
+        "Homes": [
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 3,
+                        "Code": 4321,
+                        "On": false
+                    }
+                ],
+                "HomeName": "AdminHouse",
+                "Locks": [
+                    {
+                        "LockId": 3,
+                        "Open": false,
+                        "PinCodes": [
+                            7777,
+                            8888,
+                            9999
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Pink",
+                                "LightGroupId": 9,
+                                "On": false
+                            },
+                            {
+                                "Color": "Brown",
+                                "LightGroupId": 10,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 7,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "301",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gray",
+                                "LightGroupId": 11,
+                                "On": false
+                            },
+                            {
+                                "Color": "Black",
+                                "LightGroupId": 12,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 9,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 8,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "302",
+                        "WindowBlinds": false
+                    }
+                ]
+            },
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 4,
+                        "Code": 8765,
+                        "On": false
+                    }
+                ],
+                "HomeName": "Penthouse",
+                "Locks": [
+                    {
+                        "LockId": 4,
+                        "Open": false,
+                        "PinCodes": [
+                            1010,
+                            2020,
+                            3030
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Magenta",
+                                "LightGroupId": 13,
+                                "On": false
+                            },
+                            {
+                                "Color": "Teal",
+                                "LightGroupId": 14,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 10,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "401",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gold",
+                                "LightGroupId": 15,
+                                "On": false
+                            },
+                            {
+                                "Color": "Silver",
+                                "LightGroupId": 16,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 12,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 11,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "402",
+                        "WindowBlinds": false
+                    }
+                ]
+            }
+        ],
+        "Password": "John",
+        "Username": "Nigel"
+    },
+    "admin": {
+        "Homes": [
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 3,
+                        "Code": 4321,
+                        "On": false
+                    }
+                ],
+                "HomeName": "AdminHouse",
+                "Locks": [
+                    {
+                        "LockId": 3,
+                        "Open": false,
+                        "PinCodes": [
+                            7777,
+                            8888,
+                            9999
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Pink",
+                                "LightGroupId": 9,
+                                "On": false
+                            },
+                            {
+                                "Color": "Brown",
+                                "LightGroupId": 10,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 7,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "301",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gray",
+                                "LightGroupId": 11,
+                                "On": false
+                            },
+                            {
+                                "Color": "Black",
+                                "LightGroupId": 12,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 9,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 8,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "302",
+                        "WindowBlinds": false
+                    }
+                ]
+            },
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 4,
+                        "Code": 8765,
+                        "On": false
+                    }
+                ],
+                "HomeName": "Penthouse",
+                "Locks": [
+                    {
+                        "LockId": 4,
+                        "Open": false,
+                        "PinCodes": [
+                            1010,
+                            2020,
+                            3030
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Magenta",
+                                "LightGroupId": 13,
+                                "On": false
+                            },
+                            {
+                                "Color": "Teal",
+                                "LightGroupId": 14,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 10,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "401",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Gold",
+                                "LightGroupId": 15,
+                                "On": false
+                            },
+                            {
+                                "Color": "Silver",
+                                "LightGroupId": 16,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 12,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 11,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "402",
+                        "WindowBlinds": false
+                    }
+                ]
+            }
+        ],
+        "Password": "adminpass",
+        "Username": "admin"
+    },
+    "user1": {
+        "Homes": [
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 1,
+                        "Code": 1234,
+                        "On": false
+                    }
+                ],
+                "HomeName": "SmartHome",
+                "Locks": [
+                    {
+                        "LockId": 1,
+                        "Open": false,
+                        "PinCodes": [
+                            1111,
+                            2222,
+                            3333
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "White",
+                                "LightGroupId": 1,
+                                "On": false
+                            },
+                            {
+                                "Color": "Blue",
+                                "LightGroupId": 2,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 2,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 1,
+                                "x": 17,
+                                "y": -1
+                            }
+                        ],
+                        "RoomID": "101",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Red",
+                                "LightGroupId": 3,
+                                "On": false
+                            },
+                            {
+                                "Color": "Green",
+                                "LightGroupId": 4,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 3,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "102",
+                        "WindowBlinds": false
+                    }
+                ]
+            },
+            {
+                "Alarms": [
+                    {
+                        "AlarmId": 2,
+                        "Code": 5678,
+                        "On": false
+                    }
+                ],
+                "HomeName": "VacationVilla",
+                "Locks": [
+                    {
+                        "LockId": 2,
+                        "Open": false,
+                        "PinCodes": [
+                            4444,
+                            5555,
+                            6666
+                        ]
+                    }
+                ],
+                "Rooms": [
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Yellow",
+                                "LightGroupId": 5,
+                                "On": false
+                            },
+                            {
+                                "Color": "Purple",
+                                "LightGroupId": 6,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 4,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "201",
+                        "WindowBlinds": false
+                    },
+                    {
+                        "LightGroups": [
+                            {
+                                "Color": "Cyan",
+                                "LightGroupId": 7,
+                                "On": false
+                            },
+                            {
+                                "Color": "Orange",
+                                "LightGroupId": 8,
+                                "On": false
+                            }
+                        ],
+                        "Robots": [
+                            {
+                                "controlledBy": "",
+                                "id": 6,
+                                "x": 0,
+                                "y": 0
+                            },
+                            {
+                                "controlledBy": "",
+                                "id": 5,
+                                "x": 0,
+                                "y": 0
+                            }
+                        ],
+                        "RoomID": "202",
+                        "WindowBlinds": false
+                    }
+                ]
+            }
+        ],
+        "Password": "pass1",
+        "Username": "user1"
+    }
+}

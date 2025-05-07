@@ -6,6 +6,8 @@
 #include <chrono>
 #include <unordered_map>
 #include <unordered_set>
+#include <nlohmann/json.hpp> 
+using json = nlohmann::json;
 using namespace std;
 
 //Alarm class
@@ -22,6 +24,8 @@ class Alarm {
                 int GetAlarmId() const;
                 bool isOn() const;
                 bool SetAlarm(bool, int);
+		json to_json() const; // Add this for serialization
+        	static Alarm from_json(const json& j); // Add this for deserialization
 };
 
 //Lock CLass
@@ -40,6 +44,8 @@ class Lock {
                 bool isOpen() const;
                 bool SetLock(bool, int);
                 bool AddPinCode(int OldPin, int newPin);
+		json to_json() const; // Add this for serialization
+        	static Lock from_json(const json& j); // Add this for deserialization
 };
 
 //LightGorup Class
@@ -58,6 +64,8 @@ class LightGroup {
                 int getId() const;
                 bool isOn() const;
                 string getColor() const;
+		json to_json() const; // Add this for serialization
+        	static LightGroup from_json(const json& j); // Add this for deserialization
 };
 
 // --- Robot Class ---
@@ -82,6 +90,8 @@ public:
     void setX(int x_);
     void setY(int y_);
     void setControlledBy(const string& name);
+    json to_json() const; // Add this for serialization
+    static Robot from_json(const json& j); // Add this for deserialization
 };
 
 
@@ -118,6 +128,8 @@ class Room {
         	void RemoveUser(const string& username);
         	bool HasUser(const string& username) const;
         	unordered_set<string> GetUsers() const;
+		json to_json() const; // Add this for serialization
+                static Room from_json(const json& j); // Add this for deserialization
 };
 
 //Home Class
@@ -142,6 +154,8 @@ class Home {
                 void AddAlarm(const Alarm&);
                 void AddLock(const Lock&);
                 string GetName() const;
+		json to_json() const; // Add this for serialization
+                static Home from_json(const json& j);
 };
 // User Class
 class User {
@@ -149,7 +163,7 @@ class User {
                 string Username;
                 string Password;
                 vector<Home*> Networth;
-                string GetUsername();
+                
                 string GetPassword();
         public:
                 User();
@@ -159,7 +173,9 @@ class User {
                 void AddHome(const Home&);
                 bool CheckUsername(string);
                 bool CheckPassword(string);
-
+		json to_json() const; // Add this for serialization
+                static User from_json(const json& j);
+		string GetUsername();
 
 };
 #endif /* CSHOME_H_ */

@@ -36,6 +36,13 @@ void createLoginMessage(CSmessage & request, string username, string password) {
     request.addParam("Password", password);
 }
 
+void createUserMessage(CSmessage& request, const User& user)
+{
+    request.setType("USR");  // Set type as "USR" for User
+    request.addParam("User", user.to_json().dump()); 
+    cout << "I'm wesome" << endl;
+}
+
 void createLogoutMessage(CSmessage &request) {
     request.setType("LOUT");
 }
@@ -265,7 +272,11 @@ void sendAndReceive(int socket, CSmessage &request) {
             Room p = response.deserializeRoom(k);
             cout << p.getRoomId() << endl;
             cout << p.getWindowBlinds() << endl;*/
-        }else {
+        }else if(type == "USRES")
+	{
+	    cout << response.getParam("Status");	
+	}
+	else {
             cout << "Unknown response received: " << buffer << endl;
         }
     } else {
@@ -510,12 +521,95 @@ void gameRoomMenu(int clientSocket){
     close(udpSocket);
 }
 
+void create_user(int socket,AppState &state)
+{
+    string username, password;
+    string homeName;
+    string choice;
+    
+    // Asking for Username and Password
+    cout << "Please provide the following details to create your account.\n";
+    cout << "Username: ";
+    cin >> username;
+    cout << "Password: ";
+    cin >> password;
+
+    // Create new user (user object creation can be enhanced further here)
+    User newUser(username, password, {});
+    	
+    cout << "How many homes do you want to create for this account? ";
+    int numHomes;
+    cin >> numHomes;
+
+    for (int homeCount = 0; homeCount < numHomes; ++homeCount) {
+    	// Ask for Home Name
+    	string homeName;
+    	cout << "Enter home name for home " << homeCount + 1 << ": ";
+    	cin >> homeName;
+
+    	// Create new home and add it to the user's account
+    	Home newHome(homeName, {}, {}, {});  // Add logic to create rooms and other items dynamically
+    	newUser.AddHome(newHome);
+    	cout << "Home " << homeName << " created and linked to your account.\n";
+
+    	// Ask if they want to add rooms to this home
+    	cout << "Would you like to add rooms to your home " << homeName << "? (y/n): ";
+    	string choice;
+    	cin >> choice;
+
+    	if (choice == "y") {
+        	// Ask how many rooms they want to add
+        	int numRooms;
+        	cout << "How many rooms would you like to add to " << homeName << "? ";
+        	cin >> numRooms;
+
+        	for (int roomCount = 0; roomCount < numRooms; ++roomCount) {
+            	// Ask for room details
+            		string roomId, lightColor;
+            		vector<LightGroup> roomLights;
+            		cout << "Enter room ID for room " << roomCount + 1 << ": ";
+            		cin >> roomId;
+
+            		// Ask if they want to add lights to the room
+            		cout << "Would you like to add lights to this room? (y/n): ";
+            		cin >> choice;
+
+            		if (choice == "y") {
+                		int lightCount;
+                		cout << "How many lights do you want to add to this room? ";
+                		cin >> lightCount;
+
+                		// Loop to create lights
+                		for (int i = 0; i < lightCount; i++) {
+                    		cout << "Enter light " << i + 1 << " color: ";
+                    		cin >> lightColor;
+                    		LightGroup newLight(i + 1, lightColor); // Create light
+                    		roomLights.push_back(newLight); // Add light to room
+                	}
+            	}
+
+            	// Create room and add it to the home
+            	Room newRoom(roomId, roomLights, {});
+            	newHome.AddRoom(newRoom);
+            	cout << "Room " << roomId << " created and added to home " << homeName << ".\n";
+        }
+    }
+  }
+
+   // If other features are needed (like robots, alarms), you can follow a similar approach
+   cout << "Account created successfully!\n";
+   CSmessage request;
+   createUserMessage(request, newUser);
+   sendAndReceive(socket, request);
+   state = MAIN_MENU;
+}
+
 
 // **Top Menu (Login/Exit)**
 void topMenu(int socket, AppState &state) {
     string choice;
     while (state == TOP_MENU) {
-        cout << "\nTop Menu:\n1. Login\n99. Exit\nChoice: ";
+        cout << "\nTop Menu:\n1. Login\n2. Create Accountn\n99. Exit\nChoice: ";
         cin >> choice;
 
         if (choice == "1") {
@@ -532,6 +626,10 @@ void topMenu(int socket, AppState &state) {
 	    state = MAIN_MENU;
 	    return;
         } 
+	else if(choice == "2")
+	{
+		create_user(socket,state);
+	}
         else if (choice == "99") {
             cout << "Exiting...\n";
             close(socket);

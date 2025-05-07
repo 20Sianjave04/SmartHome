@@ -17,7 +17,7 @@ using namespace std;
 
 const set<string> MCMDS({
     "LGIN", "LOUT", "LISTH", "AHO", "GRO", "GAL", "GLO",
-    "SRO", "SAL", "SLO"
+    "SRO", "SAL", "SLO", "USR"
 });
 
 const set<string> RESPONSES({
