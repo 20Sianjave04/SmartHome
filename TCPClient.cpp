@@ -290,15 +290,18 @@ int current_robot_id;
 
 void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket, char move)
 {
+	 json moveMessage;
+
+	 moveMessage["Type"] = "MRO";  // Move Robot Operation
          if (move == 'w') dy += -1;
          else if (move == 's') dy += 1;
          else if (move == 'a') dx += -1;
          else if (move == 'd') dx += 1;
-         else return;
+         else moveMessage["Type"] = "OUT"; 
 
-         json moveMessage;
+        
          cout << currentUsername << endl;
-         moveMessage["Type"] = "MRO";  // Move Robot Operation
+       
          moveMessage["username"] = currentUsername; // You must save logged-in username!
          moveMessage["room"] = lastReceivedRoom.getRoomId(); // room you are in
          moveMessage["robotId"] = current_robot_id;

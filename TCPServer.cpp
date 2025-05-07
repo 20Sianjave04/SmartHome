@@ -616,7 +616,14 @@ void handleUDP() {
     			if (controlledRobot) {
         			controlledRobot->setX(x);  // Update robot's X position
         			controlledRobot->setY(y);  // Update robot's Y position
-        			controlledRobot->setControlledBy(username);  // Update the user controlling the robot
+				if (robotUpdate["Type"] == "OUT")
+				{
+					controlledRobot->setControlledBy("");
+				}
+				else
+				{
+					controlledRobot->setControlledBy(username);  // Update the user controlling the ro
+				}
 				cout << "[Debug] Updated Robot " << robotId << " to position (" << x << ", " << y << ") controlled by " << username << endl;
     			} else {
         			cerr << "Robot with ID " << robotId << " not found in room.\n";
@@ -637,7 +644,14 @@ void handleUDP() {
                             			sockaddr_in targetAddr = userUdpAddr[targetUser];
                             			json responseMessage;
                             			responseMessage["Type"] = "MRRES";
-                            			responseMessage["Username"] = username;
+						if (robotUpdate["Type"] == "OUT")
+						{
+							responseMessage["Username"] = "Free to Use";
+						}
+						else
+						{
+							responseMessage["Username"] = username;
+						}
                             			responseMessage["RobotId"] = robotId;
                             			responseMessage["X"] = x;
                             			responseMessage["Y"] = y;
