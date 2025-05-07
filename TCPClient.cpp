@@ -317,55 +317,8 @@ void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket)
 
 }
 
-void gameRoomMenu() {
-    cout << "\nEntered Game Room Mode!\n";
-
-    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    struct sockaddr_in serverUDPAddr{};
-    serverUDPAddr.sin_family = AF_INET;
-    serverUDPAddr.sin_port = htons(9090); // Same as your server UDP port
-    serverUDPAddr.sin_addr.s_addr = inet_addr(ip); // Server IP
-    
-    
-    hello_udp(serverUDPAddr, udpSocket);
-    string choice;
-    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
-    cin >> choice;
-
-    if (choice == "1") {
-        robot_control(serverUDPAddr, udpSocket);
-    }
-    else if (choice == "2") {
-        // View robots
-	/*
-        cout << "Listening for robot updates (press Ctrl+C to exit)...\n";
-
-        char buffer[1024];
-        struct sockaddr_in fromAddr;
-        socklen_t fromLen = sizeof(fromAddr);
-
-        while (true) {
-            memset(buffer, 0, sizeof(buffer));
-            int bytes = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0,
-                                 (struct sockaddr*)&fromAddr, &fromLen);
-
-            if (bytes > 0) {
-                buffer[bytes] = '\0';
-                try {
-		    cout << buffer << endl;
-                    json received = json::parse(buffer);
-		    
-                    if (received["Type"] == "MRRES") {
-                        cout << "Robot " << received["RobotId"]
-                             << " moved to (" << received["X"] << ", " << received["Y"]
-                             << ") by " << received["Username"] << endl;
-                    }
-                } catch (...) {
-                    cerr << "Invalid message format.\n";
-                }
-            }
-	    
-        }*/
+void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket)
+{
 	cout << "Listening for robot updates (press 'q' to return to the previous menu, or any other key to continue listening)...\n";
 
     	char buffer[1024];
@@ -429,6 +382,29 @@ void gameRoomMenu() {
             		break;
         	}
     	}
+
+}
+
+void gameRoomMenu() {
+    cout << "\nEntered Game Room Mode!\n";
+
+    int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    struct sockaddr_in serverUDPAddr{};
+    serverUDPAddr.sin_family = AF_INET;
+    serverUDPAddr.sin_port = htons(9090); // Same as your server UDP port
+    serverUDPAddr.sin_addr.s_addr = inet_addr(ip); // Server IP
+    
+    
+    hello_udp(serverUDPAddr, udpSocket);
+    string choice;
+    cout << "Choose:\n1. Control Robot\n2. View Robots\nChoice: ";
+    cin >> choice;
+
+    if (choice == "1") {
+        robot_control(serverUDPAddr, udpSocket);
+    }
+    else if (choice == "2") {
+	robot_listening(serverUDPAddr, udpSocket);
     }	
     close(udpSocket);
 }
