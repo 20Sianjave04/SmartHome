@@ -24,8 +24,9 @@ bool isLoggedIn = false;
 string currentHome = "";
 void homeMenu(int socket);  
 Room lastReceivedRoom;
+bool inRoom = false;
 
-void gameRoomMenu();
+void gameRoomMenu(int clientSocket);
 string currentUsername;
 			   
 void createLoginMessage(CSmessage & request, string username, string password) {
@@ -152,7 +153,7 @@ void processAccessHomeResponse(CSmessage & responseR)
     }
 }
 
-void processGetRoomResponse(CSmessage &responseR) {
+void processGetRoomResponse(CSmessage &responseR, int socket) {
     string response = responseR.getParam("Response");
     if (response == "Ok") {
         cout << "plz" << endl;
@@ -182,8 +183,11 @@ void processGetRoomResponse(CSmessage &responseR) {
     		cout << "    Position: (" << robot.getX() << ", " << robot.getY() << ")" << endl;
     		cout << "    Controlled By: " << (robot.getControlledBy().empty() ? "None" : robot.getControlledBy()) << endl;
 	}
-
-	gameRoomMenu();
+	if (!inRoom)
+	{
+		inRoom = true;
+		gameRoomMenu(socket);
+	}
     } else {
         cout << "Room Not Found or Invalid Request." << endl;
     }
@@ -232,7 +236,7 @@ void sendAndReceive(int socket, CSmessage &request) {
             processAccessHomeResponse(response);
         } else if (type == "GRRES") {
 	    cout<< "here" << endl;
-            processGetRoomResponse(response);
+            processGetRoomResponse(response, socket);
 
         } else if (type == "GARES") {
             processGetAlarmResponse(response);
@@ -307,6 +311,33 @@ void robot_control(struct sockaddr_in &serverUDPAddr, int udpSocket, char move)
        
 }
 
+void update_local_room(int robotId, int newX, int newY, string username)
+{
+	
+
+    cout << "Robot " << robotId
+         << " moved to (" << newX << ", " << newY << ") by "
+         << username << endl;
+
+    // Find the robot in the current room and update its position and controlledBy field
+    Room *room = &lastReceivedRoom;
+    if (room) {
+        Robot* robot = room->GetRobot(robotId);
+        if (robot) {
+            // Update the robot's position locally
+            robot->setX(newX);
+            robot->setY(newY);
+
+            // Update the "controlled by" field with the username
+            robot->setControlledBy(username); // Assuming setControlledBy() method exists
+        } else {
+            cerr << "Robot not found in the room.\n";
+        }
+    } else {
+        cerr << "Room not found.\n";
+    }
+}
+
 void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode)
 {
 	cout << "Listening for robot updates (press 'q' to return to the previous menu, or any other key to continue listening)...\n";
@@ -343,10 +374,11 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode
                         			json received = json::parse(buffer);
 
                         			if (received["Type"] == "MRRES") {
-                            				cout << "Robot " << received["RobotId"]
-                                 			<< " moved to (" << received["X"] << ", " 
-                                 			<< received["Y"] << ") by " 
-                                 			<< received["Username"] << endl;
+							int robotId = received["RobotId"];
+    							int newX = received["X"];
+    							int newY = received["Y"];
+    							string username = received["Username"];
+                            				update_local_room(robotId,newX,newY,username);
                         			}
                     			} catch (...) {
                         			cerr << "Invalid message format.\n";
@@ -390,11 +422,14 @@ void robot_listening(struct sockaddr_in &serverUDPAddr, int udpSocket, bool mode
 
 }
 
-void robot_control_c(struct sockaddr_in &serverUDPAddr, int udpSocket)
+void robot_control_c(struct sockaddr_in &serverUDPAddr, int udpSocket, int clientSocket)
 {
         int robotId;
         cout << "Enter Robot ID to control: ";
         cin >> robotId;
+	CSmessage request;
+    	createGetRoomMessage(request, lastReceivedRoom.getRoomId());  // Assuming you're passing room ID as string
+    	sendAndReceive(clientSocket, request);
         Robot * controlled_robot = lastReceivedRoom.GetRobot(robotId);
         if (controlled_robot == nullptr)
         {
@@ -409,7 +444,7 @@ void robot_control_c(struct sockaddr_in &serverUDPAddr, int udpSocket)
 }
 
 
-void gameRoomMenu() {
+void gameRoomMenu(int clientSocket){
     cout << "\nEntered Game Room Mode!\n";
 
     int udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -427,7 +462,7 @@ void gameRoomMenu() {
     	cin >> choice;
 
     	if (choice == "1") {
-        	robot_control_c(serverUDPAddr, udpSocket);
+        	robot_control_c(serverUDPAddr, udpSocket, clientSocket);
     	}
     	else if (choice == "2") {
 		robot_listening(serverUDPAddr, udpSocket, false);
@@ -436,13 +471,13 @@ void gameRoomMenu() {
 	{
 		json quitMessage;
          	cout << currentUsername << endl;
-         	quitMessage["Type"] = "MRO";  // Move Robot Operation
+         	quitMessage["Type"] = "QUIT";  // Move Robot Operation
          	quitMessage["username"] = currentUsername; // You must save logged-in username!
 
          	string outquit = quitMessage.dump();
          	cout << outquit << endl;
          	sendto(udpSocket, outquit.c_str(), outquit.size(), 0, (struct sockaddr*)&serverUDPAddr, sizeof(serverUDPAddr));
-
+                inRoom = false;
 		break;
 	}
     }	

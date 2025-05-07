@@ -612,6 +612,16 @@ void handleUDP() {
                     		cerr << "Could not find room for user.\n";
                     		continue;
                 	}
+			Robot* controlledRobot = room->GetRobot(robotId);  // Find the robot by its ID
+    			if (controlledRobot) {
+        			controlledRobot->setX(x);  // Update robot's X position
+        			controlledRobot->setY(y);  // Update robot's Y position
+        			controlledRobot->setControlledBy(username);  // Update the user controlling the robot
+				cout << "[Debug] Updated Robot " << robotId << " to position (" << x << ", " << y << ") controlled by " << username << endl;
+    			} else {
+        			cerr << "Robot with ID " << robotId << " not found in room.\n";
+        			continue;
+    			}
 
                         cout << "OMGGG" << endl;
                 	{
