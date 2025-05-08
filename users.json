@@ -1,0 +1,49 @@
+{
+    "Bob": {
+        "Homes": [
+            "VacationVilla",
+            "AdminHouse"
+        ],
+        "Password": "bobpass",
+        "Username": "Bob"
+    },
+    "Jane": {
+        "Homes": [
+            "SmartHome",
+            "Penthouse"
+        ],
+        "Password": "janepass",
+        "Username": "Jane"
+    },
+    "Nigel": {
+        "Homes": [
+            "AdminHouse",
+            "Penthouse"
+        ],
+        "Password": "John",
+        "Username": "Nigel"
+    },
+    "Simon": {
+        "Homes": [
+            "SmartHome"
+        ],
+        "Password": "Jaimes",
+        "Username": "Simon"
+    },
+    "admin": {
+        "Homes": [
+            "AdminHouse",
+            "Penthouse"
+        ],
+        "Password": "adminpass",
+        "Username": "admin"
+    },
+    "user1": {
+        "Homes": [
+            "SmartHome",
+            "VacationVilla"
+        ],
+        "Password": "pass1",
+        "Username": "user1"
+    }
+}

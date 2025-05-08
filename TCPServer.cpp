@@ -10,13 +10,13 @@
 #include <thread>
 #include <mutex>
 #include "CSmessage.h"
-#include "CSHome.h"
+#include "User.h"
 #include <unordered_set>
 #include <chrono>
 #include <nlohmann/json.hpp>
 #include <set>
 #include <fstream>
-
+#include "CSdatabase.h"
 using namespace std;
 
 std::mutex sessionMutex;
@@ -24,93 +24,10 @@ std::mutex homeMutex;
 std::mutex userMutex;
 std::mutex udpMutex;
 
+
+// --- Homes (shared) ---
+// --- Homes (shared) ---
 /*
-map<string, User> users;
-// User database
-void saveDatabaseToFile() {
-    json j;
-    for (const auto& [username, user] : users) {
-        j[username] = user.to_json();  // Serialize each user
-    }
-
-    std::ofstream file("database.json");  // Open file for writing
-    if (file.is_open()) {
-        file << j.dump(4);  // Pretty print the JSON with 4 spaces for indentation
-    } else {
-        cout << "Error: Unable to open database file for writing.\n";
-    }
-}
-
-void initializeDefaultUsers() {
-    cout << "Server did not have users. Initializing with default data." << endl;
-    
-    // Define some predefined homes
-    Home smartHome("SmartHome", {
-        Room("101", {LightGroup(1, "White"), LightGroup(2, "Blue")}, {Robot(1), Robot(2)}),
-        Room("102", {LightGroup(3, "Red"), LightGroup(4, "Green")}, {Robot(3)})
-    }, {Alarm(1, 1234)}, {Lock(1, {1111, 2222, 3333})});
-
-    Home vacationVilla("VacationVilla", {
-        Room("201", {LightGroup(5, "Yellow"), LightGroup(6, "Purple")}, {Robot(4)}),
-        Room("202", {LightGroup(7, "Cyan"), LightGroup(8, "Orange")}, {Robot(5), Robot(6)})
-    }, {Alarm(2, 5678)}, {Lock(2, {4444, 5555, 6666})});
-
-    Home adminHouse("AdminHouse", {
-        Room("301", {LightGroup(9, "Pink"), LightGroup(10, "Brown")}, {Robot(7)}),
-        Room("302", {LightGroup(11, "Gray"), LightGroup(12, "Black")}, {Robot(8), Robot(9)})
-    }, {Alarm(3, 4321)}, {Lock(3, {7777, 8888, 9999})});
-
-    Home penthouse("Penthouse", {
-        Room("401", {LightGroup(13, "Magenta"), LightGroup(14, "Teal")}, {Robot(10)}),
-        Room("402", {LightGroup(15, "Gold"), LightGroup(16, "Silver")}, {Robot(11), Robot(12)})
-    }, {Alarm(4, 8765)}, {Lock(4, {1010, 2020, 3030})});
-
-    // Initialize the users map with predefined users
-    users = {
-        {"user1", {"user1", "pass1", {&smartHome, &vacationVilla}}},
-        {"admin", {"admin", "adminpass", {&adminHouse, &penthouse}}},
-        {"Nigel", {"Nigel", "John", {&adminHouse, &penthouse}}},
-        {"Jane", {"Jane", "janepass", {&smartHome, &penthouse}}},
-        {"Bob", {"Bob", "bobpass", {&vacationVilla, &adminHouse}}}
-    };
-
-    // Save the users to the file
-    saveDatabaseToFile();  // Write the initialized data to database.json
-}
-
-void loadDatabaseFromFile() {
-    std::ifstream file("database.json");
-    json j;
-
-    // If the file does not exist, initialize an empty database
-    if (!file.is_open()) {
-        cout << "Error: Could not open database file, initializing with empty data.\n";
-        initializeDefaultUsers();  // Initialize with default users
-        return;  // No need to load anything, users will be empty
-    }
-
-    // If the file opens, read JSON data
-    file >> j;
-
-    // Clear existing users in case we're reloading
-    users.clear();
-
-    // Deserialize each user and update the global users map
-    for (const auto& [username, userJson] : j.items()) {
-        users[username] = User::from_json(userJson);  // Deserialize and add user
-    }
-
-    // If the users map is still empty, initialize with predefined data
-    if (users.empty()) {
-        cout << "No users found in database, initializing with default users.\n";
-        initializeDefaultUsers();  // Initialize with default users
-    }
-}
-*/
-
-// --- Homes (shared) ---
-// --- Homes (shared) ---
-
 Home smartHome("SmartHome",
     {
         Room("101", {LightGroup(1, "White"), LightGroup(2, "Blue")}, {Robot(1), Robot(2)}),
@@ -154,7 +71,7 @@ map<string, User> users = {
     {"Jane", {"Jane", "janepass", {&smartHome, &penthouse}}},
     {"Bob", {"Bob", "bobpass", {&vacationVilla, &adminHouse}}}
 };
-
+*/
 
 
 unordered_map<int, string> clientCurrentHome;
@@ -317,6 +234,7 @@ void createGetRoomResponse(CSmessage &request, CSmessage &response, int clientSo
         response.setType("GRRES");
         response.addParam("Response", "Invalid Room");
     }
+    saveHomes("homes.json");
 }
 
 void createGetAlarmResponse(CSmessage &request, CSmessage &response, int clientSocket) {
@@ -402,6 +320,7 @@ void SetRoomResponse(CSmessage &request, CSmessage &response, int clientSocket) 
         response.setType("SRRES");
         response.addParam("Response", "Invalid User");
     }
+    saveHomes("homes.json");
 }
 
 void SetAlarmResponse(CSmessage &request, CSmessage & response, int clientSocket) {
@@ -438,6 +357,7 @@ void SetAlarmResponse(CSmessage &request, CSmessage & response, int clientSocket
         response.setType("SARES");
         response.addParam("Response", "Not Found");
     }
+    saveHomes("homes.json");
 }
 
 void SetLockResponse(CSmessage &request, CSmessage &response, int clientSocket) {
@@ -475,29 +395,51 @@ void SetLockResponse(CSmessage &request, CSmessage &response, int clientSocket) 
         response.setType("SLRES");
         response.addParam("Response", "Not Found");
     }
+    saveHomes("homes.json");
 }
 
-void createUserResponse(CSmessage& request, CSmessage& response, int clientSocket) {
-    // Step 1: Get the serialized user data from the request
-    cout << "in user creation" << endl;
-    string userJson = request.getParam("User");  // Assuming "User" is the key
-    json j = json::parse(userJson);  // Parse the JSON data into a JSON object
-    cout << userJson<< endl;
-    cout << j["Username"] << endl;
-    // Step 2: Deserialize the user data into a User object
-    User newUser;
-    newUser.from_json(j);  // Assuming you have a from_json method in the User class
-    cout << newUser.GetUsername();
-    // Step 3: Store the user in the server database (or any data structure)
-    users[newUser.GetUsername()] = newUser;  // Assuming users is a map to store users by username
-    //saveDatabaseToFile();
-    // Step 4: Prepare the response to the client
-    response.setType("USRES");  // Acknowledgment message
-    response.addParam("Status", "User successfully created and added.");
 
+void createUserResponse(CSmessage& request, CSmessage& response, int clientSocket) {
+     cout << "[Debug] In user creation" << endl;
+
+    string username = request.getParam("Username");
+    string password = request.getParam("Password");
+
+    if (username.empty() || password.empty()) {
+        response.setType("USRES");
+        response.addParam("Status", "Missing username or password.");
+        return;
+    }
+
+    if (users.count(username)) {
+        response.setType("USRES");
+        response.addParam("Status", "Username already exists.");
+        return;
+    }
+
+    // Create and add empty user (no homes yet)
+    User newUser(username, password, {});
+    users[username] = newUser;
+    saveUsers("users.json");  // persist change
+
+    response.setType("USRES");
+    response.addParam("Status", "User successfully created.");
    
 }
 
+void AssignHomeResponse(CSmessage& request, CSmessage& response, int clientSocket) {
+    std::string username = request.getParam("Username");
+    std::string homeName = request.getParam("HomeName");
+
+    response.setType("AHURES");  // Assign Home to User Response
+
+    if (assignHomeToUser(username, homeName)) {
+        saveUsers("users.json");  // Save only if successful
+        response.addParam("Status", "Home assigned successfully.");
+    } else {
+        response.addParam("Status", "Failed to assign home.");
+    }
+}
 
 // Send response back to client
 void sendResponse(int clientSocket, CSmessage &response) {
@@ -543,17 +485,26 @@ void processMessage(int clientSocket, CSmessage &request) {
     else if (type == "SRO") {
 	cout << "ohho" << endl;
 	SetRoomResponse(request, response, clientSocket);
+	saveHomes("homes.json");
     }
     else if (type == "SAL") {
         SetAlarmResponse(request, response, clientSocket);    
+	saveHomes("homes.json");
     } 
     else if (type == "SLO") {
         SetLockResponse(request, response, clientSocket);
+	saveHomes("homes.json");
           
     }
     else if(type == "USR")
     {
 	createUserResponse(request,response, clientSocket);
+	saveUsers("users.json");
+    }
+    else if(type == "AH")
+    {
+	AssignHomeResponse(request,response, clientSocket);
+	saveUsers("users.json");
     }
 
     sendResponse(clientSocket, response);
@@ -627,6 +578,7 @@ void handleUDP() {
 		}
 		else if (robotUpdate["Type"] == "QUIT")
 		{
+			saveHomes("homes.json");
 			string username = robotUpdate["username"];
     			string roomKey;
 
@@ -702,6 +654,8 @@ void handleUDP() {
                 	{	
                     		std::lock_guard<std::mutex> lock(homeMutex);
                     		cout << "awwwww" << endl;
+				home = getHomeByName(homeName);
+				/*
                     		for (auto& h : users[username].GetHomes()) {
 					cout << "[Debug] Comparing home name: '" << h->GetName() << "' with '" << homeName << "'" << endl;
                         		if (h->GetName() == homeName) {
@@ -710,7 +664,7 @@ void handleUDP() {
                         		}
                     		}
                     		cout << "Because I miss u all the time" << endl;
-		    		cout << home->GetName() << endl;
+		    		cout << home->GetName() << endl;*/
                     		if (home) {
                         		cout << roomId << endl;
 		        		cout << roomId.length() << endl;	
@@ -744,6 +698,7 @@ void handleUDP() {
 
                         cout << "OMGGG" << endl;
                 	{
+				saveHomes("homes.json");
                     		std::lock_guard<std::mutex> lock(udpMutex);
                     		cout << " uwuuuuu" << endl;
                     		for (const string& targetUser : dynamicRooms[roomKey]) {
@@ -770,6 +725,7 @@ void handleUDP() {
 
                             			string outData = responseMessage.dump();
 			    			cout << outData << endl;
+						saveHomes("homes.json");
                             			sendto(udpSocket, outData.c_str(), outData.size(), 0,(struct sockaddr*)&targetAddr, sizeof(targetAddr));
 
                         		}
@@ -789,7 +745,9 @@ void handleUDP() {
 
 
 int main() {
-    //loadDatabaseFromFile();
+
+    loadHomes("homes.json");
+    loadUsers("users.json");
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in serverAddr;
 
@@ -810,10 +768,12 @@ int main() {
         if (clientSocket >= 0) {
 	    std::thread clientThread(handleClient, clientSocket);
             clientThread.detach();	
+	    saveUsers("users.json");
+            saveHomes("homes.json");
         }
-	//saveDatabaseToFile();
     }
-
+    saveUsers("users.json");
+    saveHomes("homes.json");
     close(serverSocket);
     return 0;
 }

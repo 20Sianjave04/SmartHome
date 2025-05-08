@@ -1,7 +1,6 @@
 #include <iostream>
 #include "CSHome.h"
 
-
 Alarm:: Alarm() :AlarmId(0), On(false), Code(1234) {}
 
 Alarm:: Alarm(int id, int code) : AlarmId(id), On(false), Code(code) {}
@@ -570,88 +569,4 @@ Home Home::from_json(const json& j) {
     return home;
 }
 
-User :: User() : Username("NA"), Password("NA"){}
-User :: User(string name, string password, vector<Home*>net) : Username(name), Password(password), Networth(net){}
-
-json User::to_json() const {
-    json j;
-    j["Username"] = Username;
-    j["Password"] = Password;
-
-    // Serialize Homes
-    json homesArray = json::array();
-    for (const auto& home : Networth) {
-        homesArray.push_back(home->to_json());
-    }
-    j["Homes"] = homesArray;
-
-    return j;
-}
-
-// User Deserialization
-User User::from_json(const json& j) {
-    User user;
-    user.Username = j["Username"];
-    user.Password = j["Password"];
-
-    // Deserialize Homes
-    for (const auto& homeJson : j["Homes"]) {
-        // Here, we assume that you have to manage the pointers to Home objects.
-        // Be careful with pointer handling when deserializing.
-        Home* home = new Home(Home::from_json(homeJson));  // Allocate memory for the new Home
-        user.Networth.push_back(home);  // Add to user's homes
-    }
-
-    return user;
-}
-
-string User:: GetUsername()
-{
-        return Username;
-}
-
-string User:: GetPassword()
-{
-        return Password;
-}
-
-vector<Home*> User :: GetHomes()
-{
-	return Networth;
-}
-
-Home * User :: GetHome(string homeName)
-{
-        for (Home * home : Networth)
-        {
-                if (home->GetName() == homeName)
-                {
-                        return home;
-                }
-        }
-        return nullptr;
-}
-
-bool User :: CheckUsername(string us)
-{	
-	if (us != GetUsername())
-	{
-		return false;
-	}
-	return true;
-	
-}
-
-bool User :: CheckPassword(string pw)
-{
-	if(pw != GetPassword())
-	{
-		return false;
-	}
-	return true;
-}
-void User::AddHome(const Home& home) {
-    Home* newHome = new Home(home);  // Allocate memory for a new Home
-    Networth.push_back(newHome);
-}
 

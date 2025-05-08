@@ -157,25 +157,4 @@ class Home {
 		json to_json() const; // Add this for serialization
                 static Home from_json(const json& j);
 };
-// User Class
-class User {
-        private:
-                string Username;
-                string Password;
-                vector<Home*> Networth;
-                
-                string GetPassword();
-        public:
-                User();
-                User(string name, string password, vector<Home*>net);
-		vector<Home*> GetHomes();
-                Home * GetHome(string);
-                void AddHome(const Home&);
-                bool CheckUsername(string);
-                bool CheckPassword(string);
-		json to_json() const; // Add this for serialization
-                static User from_json(const json& j);
-		string GetUsername();
-
-};
 #endif /* CSHOME_H_ */
