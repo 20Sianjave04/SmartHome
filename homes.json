@@ -4,7 +4,7 @@
             {
                 "AlarmId": 1,
                 "Code": 1234,
-                "On": false
+                "On": true
             }
         ],
         "HomeName": "SmartHome",
@@ -23,32 +23,32 @@
             {
                 "LightGroups": [
                     {
-                        "Color": "White",
+                        "Color": "green",
                         "LightGroupId": 1,
-                        "On": false
+                        "On": true
                     },
                     {
-                        "Color": "Blue",
+                        "Color": "purple",
                         "LightGroupId": 2,
-                        "On": false
+                        "On": true
                     }
                 ],
                 "Robots": [
                     {
-                        "controlledBy": "user1",
+                        "controlledBy": "",
                         "id": 1,
-                        "x": 21,
+                        "x": 8,
                         "y": 1
                     },
                     {
                         "controlledBy": "",
                         "id": 2,
-                        "x": 17,
-                        "y": 0
+                        "x": 0,
+                        "y": -7
                     }
                 ],
                 "RoomID": "101",
-                "WindowBlinds": false
+                "WindowBlinds": true
             },
             {
                 "LightGroups": [
@@ -67,8 +67,8 @@
                     {
                         "controlledBy": "",
                         "id": 3,
-                        "x": 0,
-                        "y": 0
+                        "x": -3,
+                        "y": -4
                     }
                 ],
                 "RoomID": "102",

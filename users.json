@@ -30,6 +30,13 @@
         "Password": "Jaimes",
         "Username": "Simon"
     },
+    "Solana": {
+        "Homes": [
+            "SmartHome"
+        ],
+        "Password": "Canova",
+        "Username": "Solana"
+    },
     "admin": {
         "Homes": [
             "AdminHouse",
